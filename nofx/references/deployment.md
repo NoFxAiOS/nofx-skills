@@ -1,57 +1,57 @@
-# NOFX 部署指南
+# NOFX Deployment Guide
 
-## 快速部署
+## Quick Deployment
 
-### 一键安装 (Linux/macOS)
+### One-Click Install (Linux/macOS)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/NoFxAiOS/nofx/main/install.sh | bash
 ```
 
-安装完成后访问: **http://127.0.0.1:3000**
+After installation, visit: **http://127.0.0.1:3000**
 
 ### Docker Compose
 
 ```bash
-# 下载并启动
+# Download and start
 curl -O https://raw.githubusercontent.com/NoFxAiOS/nofx/main/docker-compose.prod.yml
 docker compose -f docker-compose.prod.yml up -d
 
-# 管理命令
-docker compose -f docker-compose.prod.yml logs -f      # 查看日志
-docker compose -f docker-compose.prod.yml restart      # 重启
-docker compose -f docker-compose.prod.yml down         # 停止
-docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d  # 更新
+# Management commands
+docker compose -f docker-compose.prod.yml logs -f      # View logs
+docker compose -f docker-compose.prod.yml restart      # Restart
+docker compose -f docker-compose.prod.yml down         # Stop
+docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d  # Update
 ```
 
-### Railway 一键云部署
+### Railway One-Click Cloud Deployment
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/nofx?referralCode=nofx)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/nofx)
 
-## Windows 安装
+## Windows Installation
 
-### 方法 1: Docker Desktop (推荐)
+### Method 1: Docker Desktop (Recommended)
 
-1. 下载安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-2. 启动 Docker Desktop
-3. PowerShell 运行:
+1. Download and install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+2. Start Docker Desktop
+3. Run in PowerShell:
 ```powershell
 curl -o docker-compose.prod.yml https://raw.githubusercontent.com/NoFxAiOS/nofx/main/docker-compose.prod.yml
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-### 方法 2: WSL2
+### Method 2: WSL2
 
-1. 安装 WSL2:
+1. Install WSL2:
 ```powershell
 wsl --install
 ```
 
-2. 安装 Ubuntu，然后在 WSL2 中运行一键安装脚本
+2. Install Ubuntu, then run the one-click installation script in WSL2
 
-## 手动安装 (开发者)
+## Manual Installation (Developers)
 
-### 前置要求
+### Prerequisites
 
 - Go 1.21+
 - Node.js 18+
@@ -65,57 +65,57 @@ brew install ta-lib
 sudo apt-get install libta-lib0-dev
 ```
 
-### 安装步骤
+### Installation Steps
 
 ```bash
-# 1. 克隆仓库
+# 1. Clone repository
 git clone https://github.com/NoFxAiOS/nofx.git
 cd nofx
 
-# 2. 安装后端依赖
+# 2. Install backend dependencies
 go mod download
 
-# 3. 安装前端依赖
+# 3. Install frontend dependencies
 cd web && npm install && cd ..
 
-# 4. 构建并启动后端
+# 4. Build and start backend
 go build -o nofx && ./nofx
 
-# 5. 启动前端 (新终端)
+# 5. Start frontend (new terminal)
 cd web && npm run dev
 ```
 
-## 服务器部署
+## Server Deployment
 
-### 快速部署 (HTTP)
+### Quick Deployment (HTTP)
 
-默认禁用传输加密，可直接通过 IP 访问:
+Transport encryption disabled by default, accessible directly via IP:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/NoFxAiOS/nofx/main/install.sh | bash
-# 访问: http://YOUR_SERVER_IP:3000
+# Access: http://YOUR_SERVER_IP:3000
 ```
 
 ### HTTPS (Cloudflare)
 
-1. 添加域名到 Cloudflare
-2. 创建 DNS A 记录指向服务器 IP，开启代理 (橙色云)
-3. SSL/TLS 设置为 Flexible
-4. 编辑 `.env` 设置 `TRANSPORT_ENCRYPTION=true`
-5. 访问: `https://nofx.yourdomain.com`
+1. Add domain to Cloudflare
+2. Create DNS A record pointing to server IP, enable proxy (orange cloud)
+3. Set SSL/TLS to Flexible
+4. Edit `.env` to set `TRANSPORT_ENCRYPTION=true`
+5. Access: `https://nofx.yourdomain.com`
 
-## 更新
+## Updates
 
-每日运行以获取最新版本:
+Run daily to get the latest version:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/NoFxAiOS/nofx/main/install.sh | bash
 ```
 
-## 初始配置
+## Initial Configuration
 
-1. **配置 AI 模型** - 添加 API Key
-2. **配置交易所** - 设置交易所 API
-3. **创建策略** - 在 Strategy Studio 配置
-4. **创建 Trader** - 组合 AI + 交易所 + 策略
-5. **开始交易** - 启动 Trader
+1. **Configure AI Models** - Add API Keys
+2. **Configure Exchanges** - Set up exchange APIs
+3. **Create Strategies** - Configure in Strategy Studio
+4. **Create Traders** - Combine AI + Exchange + Strategy
+5. **Start Trading** - Launch Traders
