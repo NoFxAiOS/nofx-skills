@@ -260,4 +260,4 @@ nofx-skills/
 
 ## 📄 License
 
-MIT — Same as NOFX.
+MIT
