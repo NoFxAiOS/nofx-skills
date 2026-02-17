@@ -86,9 +86,9 @@ After individual coins, include:
 ## K-line Analysis Method
 
 For each timeframe (15m/1h/4h), fetch 10 candles and compute:
-- **Trend**: 3 consecutive candles direction → 📈上涨/📉下跌/↔️震荡
+- **Trend**: 3 consecutive candles direction → 📈Bullish/📉Bearish/↔️Sideways
 - **Bull/bear ratio**: count of green vs red candles out of 10
-- **MA alignment**: MA3 vs MA7 → 多头排列/空头排列
+- **MA alignment**: MA3 vs MA7 → Bullish alignment/Bearish alignment
 - **Volume change**: avg volume of last 3 candles vs previous 3 → percentage
 - **Support**: lowest low of 10 candles
 - **Resistance**: highest high of 10 candles
