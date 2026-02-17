@@ -36,17 +36,17 @@ def analyze_klines(klines):
     
     last3 = closes[-3:]
     if last3[0] < last3[1] < last3[2]:
-        trend = "📈上涨"
+        trend = "📈Bullish"
     elif last3[0] > last3[1] > last3[2]:
-        trend = "📉下跌"
+        trend = "📉Bearish"
     else:
-        trend = "↔️震荡"
+        trend = "↔️Sideways"
     
     bulls = sum(1 for i in range(len(klines)) if closes[i] >= opens[i])
     bears = len(klines) - bulls
     ma3 = sum(closes[-3:]) / 3
     ma7 = sum(closes[-7:]) / 7
-    ma_align = "多头排列" if ma3 > ma7 else "空头排列"
+    ma_align = "Bullish" if ma3 > ma7 else "Bearish"
     
     vol_recent = sum(volumes[-3:]) / 3
     vol_prev = sum(volumes[-6:-3]) / 3
@@ -95,9 +95,9 @@ def main():
     # Header
     sections.append(f"""```
 ╔══════════════════════════════════════╗
-║   NOFX AI500 智能监控报告            ║
+║   NOFX AI500 Intelligence Report            ║
 ║   {now}                     ║
-║   当前入选: {count} 币种                   ║
+║   Active selections: {count} coins                   ║
 ╚══════════════════════════════════════╝
 ```""")
     
@@ -206,29 +206,29 @@ def main():
         
         s = f"""```
 ┌──────────────────────────────────────┐
-│ 🪙 {symbol:<8} 评分:{score:.1f}  最高:{max_score:.1f}
-│ 现价:{price_str}  入选价:${start_price}
-│ 累计涨幅:{increase:.1f}%  费率:{fr_str}
-├─ OI变化 ──────────────────────────────┤
-│ 周期  │ 幅度           │     金额     │{oi_table}
-├─ 机构资金流 ─────────────────────────┤
+│ 🪙 {symbol:<8} Score:{score:.1f}  Peak:{max_score:.1f}
+│ Price:{price_str}  Entry:${start_price}
+│ Return:{increase:.1f}%  FR:{fr_str}
+├─ OI Changes ──────────────────────────────┤
+│ Period│ Change         │    Value     │{oi_table}
+├─ Inst. Flows ──────────────────────────┤
 │ {' │ '.join(nf_parts)}
-├─ K线分析 ─────────────────────────────┤"""
+├─ K-line ──────────────────────────────────┤"""
         
         for interval in ["15m", "1h", "4h"]:
             ka = kline_analysis.get(interval)
             if ka:
-                s += f"\n│ {interval}: {ka['trend']} 阳/阴:{ka['bulls']}/{ka['bears']} {ka['ma_align']}"
-                s += f"\n│     量能:{ka['vol_chg']:+.1f}% 支撑:{ka['support']} 阻力:{ka['resistance']}"
+                s += f"\n│ {interval}: {ka['trend']} Bull/Bear:{ka['bulls']}/{ka['bears']} {ka['ma_align']}"
+                s += f"\n│     Vol:{ka['vol_chg']:+.1f}% Sup:{ka['support']} Res:{ka['resistance']}"
         
         s += "\n└──────────────────────────────────────┘\n```"
         sections.append(s)
     
     # 4. OI Rankings
     for d in ["1h", "4h", "24h"]:
-        lines = [f"╔═ OI排行 {d} ══════════════════════════╗"]
+        lines = [f"╔═ OI Rank {d} ══════════════════════════╗"]
         
-        lines.append("║ 📈 增量TOP8:")
+        lines.append("║ 📈 Top 8 Increase:")
         top = oi_top[d]
         if top and top.get("success"):
             for item in top["data"].get("positions", [])[:8]:
@@ -238,7 +238,7 @@ def main():
                 usd_str = fmt_num(usd) if usd is not None else ""
                 lines.append(f"║  {item.get('rank','-')}. {sym:<10} {float(pct):+.2f}%  {usd_str}")
         
-        lines.append("║ 📉 减少TOP8:")
+        lines.append("║ 📉 Top 8 Decrease:")
         low = oi_low[d]
         if low and low.get("success"):
             for item in low["data"].get("positions", [])[:8]:
@@ -253,9 +253,9 @@ def main():
     
     # 5. Netflow Rankings
     for d in ["1h", "4h", "24h"]:
-        lines = [f"╔═ 机构资金流 {d} ════════════════════════╗"]
+        lines = [f"╔═ Inst. Flow {d} ════════════════════════╗"]
         
-        lines.append("║ 💰 流入TOP8:")
+        lines.append("║ 💰 Top 8 Inflow:")
         top = nf_top[d]
         if top and top.get("success"):
             for item in top["data"].get("netflows", [])[:8]:
@@ -263,7 +263,7 @@ def main():
                 amt = item.get("amount", 0)
                 lines.append(f"║  {item.get('rank','-')}. {sym:<10} {fmt_num(amt)}")
         
-        lines.append("║ 💸 流出TOP8:")
+        lines.append("║ 💸 Top 8 Outflow:")
         low = nf_low[d]
         if low and low.get("success"):
             for item in low["data"].get("netflows", [])[:8]:
@@ -276,7 +276,7 @@ def main():
     
     # 6. Summary
     summary_lines = ["╔══════════════════════════════════════╗",
-                      "║  📋 总结与操作建议                    ║",
+                      "║  📋 Summary & Signals                    ║",
                       "╠══════════════════════════════════════╣"]
     for coin in coins:
         symbol = coin["pair"].replace("USDT", "")
@@ -290,13 +290,13 @@ def main():
                 oi_1h = found.get("oi_delta_percent", 0)
         
         if oi_1h and float(oi_1h) > 1:
-            signal = "📈 OI增量明显,关注做多机会"
+            signal = "📈 Strong OI increase, watch for long"
         elif oi_1h and float(oi_1h) < -1:
-            signal = "📉 OI下降,注意风险"
+            signal = "📉 OI declining, watch for risk"
         else:
-            signal = "↔️ OI平稳,观望为主"
+            signal = "↔️ OI stable, wait and see"
         
-        summary_lines.append(f"║ • {symbol}: 评分{score:.1f} 涨幅{increase:.1f}%")
+        summary_lines.append(f"║ • {symbol}: Score:{score:.1f} Return:{increase:.1f}%")
         summary_lines.append(f"║   {signal}")
     
     summary_lines.append("╚══════════════════════════════════════╝")
