@@ -4,7 +4,7 @@ import json, subprocess, sys
 from datetime import datetime
 
 BASE = "https://nofxos.ai"
-KEY = "YOUR_API_KEY"
+KEY = "cm_568c67eae410d912c54c"
 DURATIONS = ["5m", "15m", "30m", "1h", "4h", "8h", "24h"]
 
 def curl_json(url):
@@ -36,17 +36,17 @@ def analyze_klines(klines):
     
     last3 = closes[-3:]
     if last3[0] < last3[1] < last3[2]:
-        trend = "📈 Up"
+        trend = "📈上涨"
     elif last3[0] > last3[1] > last3[2]:
-        trend = "📉 Down"
+        trend = "📉下跌"
     else:
-        trend = "↔️ Sideways"
+        trend = "↔️震荡"
     
     bulls = sum(1 for i in range(len(klines)) if closes[i] >= opens[i])
     bears = len(klines) - bulls
     ma3 = sum(closes[-3:]) / 3
     ma7 = sum(closes[-7:]) / 7
-    ma_align = "Bullish" if ma3 > ma7 else "Bearish"
+    ma_align = "多头排列" if ma3 > ma7 else "空头排列"
     
     vol_recent = sum(volumes[-3:]) / 3
     vol_prev = sum(volumes[-6:-3]) / 3
@@ -95,9 +95,9 @@ def main():
     # Header
     sections.append(f"""```
 ╔══════════════════════════════════════╗
-║   NOFX AI500 Market Report           ║
+║   NOFX AI500 智能监控报告            ║
 ║   {now}                     ║
-║   Selected: {count} coins                    ║
+║   当前入选: {count} 币种                   ║
 ╚══════════════════════════════════════╝
 ```""")
     
@@ -155,6 +155,7 @@ def main():
         fr_val = None
         if fr_top and fr_top.get("success"):
             fr_data = fr_top.get("data", {})
+            # Could be a single item or list
             if isinstance(fr_data, dict) and fr_data.get("symbol"):
                 if pair.upper() in fr_data["symbol"].upper():
                     fr_val = fr_data.get("funding_rate")
@@ -205,52 +206,56 @@ def main():
         
         s = f"""```
 ┌──────────────────────────────────────┐
-│ 🪙 {symbol:<8} Score:{score:.1f}  Peak:{max_score:.1f}
-│ Price:{price_str}  Entry:${start_price}
-│ Return:{increase:.1f}%  FundRate:{fr_str}
-├─ OI Change ───────────────────────────┤
-│ Period │ Change         │     Value    │{oi_table}
-├─ Inst. Fund Flow ────────────────────┤
+│ 🪙 {symbol:<8} 评分:{score:.1f}  最高:{max_score:.1f}
+│ 现价:{price_str}  入选价:${start_price}
+│ 累计涨幅:{increase:.1f}%  费率:{fr_str}
+├─ OI变化 ──────────────────────────────┤
+│ 周期  │ 幅度           │     金额     │{oi_table}
+├─ 机构资金流 ─────────────────────────┤
 │ {' │ '.join(nf_parts)}
-├─ K-line Analysis ────────────────────┤"""
+├─ K线分析 ─────────────────────────────┤"""
         
         for interval in ["15m", "1h", "4h"]:
             ka = kline_analysis.get(interval)
             if ka:
-                s += f"\n│ {interval}: {ka['trend']} Bull/Bear:{ka['bulls']}/{ka['bears']} {ka['ma_align']}"
-                s += f"\n│     Vol:{ka['vol_chg']:+.1f}% Sup:{ka['support']} Res:{ka['resistance']}"
+                s += f"\n│ {interval}: {ka['trend']} 阳/阴:{ka['bulls']}/{ka['bears']} {ka['ma_align']}"
+                s += f"\n│     量能:{ka['vol_chg']:+.1f}% 支撑:{ka['support']} 阻力:{ka['resistance']}"
         
         s += "\n└──────────────────────────────────────┘\n```"
         sections.append(s)
     
     # 4. OI Rankings
     for d in ["1h", "4h", "24h"]:
-        lines = [f"╔═ OI Ranking {d} ═════════════════════════╗"]
+        lines = [f"╔═ OI排行 {d} ══════════════════════════╗"]
         
-        lines.append("║ 📈 Top Gainers:")
+        lines.append("║ 📈 增量TOP8:")
         top = oi_top[d]
         if top and top.get("success"):
             for item in top["data"].get("positions", [])[:8]:
                 sym = item.get("symbol", "?").replace("USDT", "")
                 pct = item.get("oi_delta_percent", 0)
-                lines.append(f"║  {item.get('rank','-')}. {sym:<10} {float(pct):+.2f}%")
+                usd = item.get("oi_delta_value")
+                usd_str = fmt_num(usd) if usd is not None else ""
+                lines.append(f"║  {item.get('rank','-')}. {sym:<10} {float(pct):+.2f}%  {usd_str}")
         
-        lines.append("║ 📉 Top Losers:")
+        lines.append("║ 📉 减少TOP8:")
         low = oi_low[d]
         if low and low.get("success"):
             for item in low["data"].get("positions", [])[:8]:
                 sym = item.get("symbol", "?").replace("USDT", "")
                 pct = item.get("oi_delta_percent", 0)
-                lines.append(f"║  {item.get('rank','-')}. {sym:<10} {float(pct):+.2f}%")
+                usd = item.get("oi_delta_value")
+                usd_str = fmt_num(usd) if usd is not None else ""
+                lines.append(f"║  {item.get('rank','-')}. {sym:<10} {float(pct):+.2f}%  {usd_str}")
         
         lines.append("╚══════════════════════════════════════╝")
         sections.append("```\n" + "\n".join(lines) + "\n```")
     
     # 5. Netflow Rankings
     for d in ["1h", "4h", "24h"]:
-        lines = [f"╔═ Inst. Flow {d} ═════════════════════════╗"]
+        lines = [f"╔═ 机构资金流 {d} ════════════════════════╗"]
         
-        lines.append("║ 💰 Top Inflow:")
+        lines.append("║ 💰 流入TOP8:")
         top = nf_top[d]
         if top and top.get("success"):
             for item in top["data"].get("netflows", [])[:8]:
@@ -258,7 +263,7 @@ def main():
                 amt = item.get("amount", 0)
                 lines.append(f"║  {item.get('rank','-')}. {sym:<10} {fmt_num(amt)}")
         
-        lines.append("║ 💸 Top Outflow:")
+        lines.append("║ 💸 流出TOP8:")
         low = nf_low[d]
         if low and low.get("success"):
             for item in low["data"].get("netflows", [])[:8]:
@@ -271,7 +276,7 @@ def main():
     
     # 6. Summary
     summary_lines = ["╔══════════════════════════════════════╗",
-                      "║  📋 Summary & Signals                 ║",
+                      "║  📋 总结与操作建议                    ║",
                       "╠══════════════════════════════════════╣"]
     for coin in coins:
         symbol = coin["pair"].replace("USDT", "")
@@ -285,13 +290,13 @@ def main():
                 oi_1h = found.get("oi_delta_percent", 0)
         
         if oi_1h and float(oi_1h) > 1:
-            signal = "📈 OI rising, watch for long"
+            signal = "📈 OI增量明显,关注做多机会"
         elif oi_1h and float(oi_1h) < -1:
-            signal = "📉 OI declining, caution"
+            signal = "📉 OI下降,注意风险"
         else:
-            signal = "↔️ OI stable, hold/watch"
+            signal = "↔️ OI平稳,观望为主"
         
-        summary_lines.append(f"║ • {symbol}: Score {score:.1f} Return {increase:.1f}%")
+        summary_lines.append(f"║ • {symbol}: 评分{score:.1f} 涨幅{increase:.1f}%")
         summary_lines.append(f"║   {signal}")
     
     summary_lines.append("╚══════════════════════════════════════╝")
